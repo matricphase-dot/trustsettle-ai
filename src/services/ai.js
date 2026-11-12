@@ -188,11 +188,20 @@ async function xaiScore(brief, sanitizedDelivery) {
       model: config.ai.xaiModel,
       messages: [{ role: 'user', content: verificationPrompt(brief, sanitizedDelivery) }],
       response_format: { type: 'json_object' },
-      temperature: 0,
     }),
     signal: AbortSignal.timeout(30000),
   });
-  if (!res.ok) throw new Error(`xAI HTTP ${res.status}`);
+  if (!res.ok) {
+    // Log only a fixed category, never the provider body (which could echo secrets or user data).
+    let detail = '';
+    try { const error = await res.json(); detail = String(error?.error?.message || error?.error || error?.message || ''); } catch (_) {}
+    let category = 'request rejected; inspect xAI account, model access and request settings';
+    if (/credit|billing|balance|funds|spending/i.test(detail)) category = 'billing or credits issue';
+    else if (/api.?key|authentication|unauthorized|invalid.?key/i.test(detail) || res.status === 401) category = 'API key or authentication issue';
+    else if (/model|not found|not available|access/i.test(detail)) category = 'model unavailable or account lacks access';
+    else if (/response.format|json.object|temperature|parameter|argument/i.test(detail)) category = 'unsupported request parameter';
+    throw new Error(`xAI HTTP ${res.status}: ${category}`);
+  }
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content || '';
   const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());

@@ -19,6 +19,7 @@ describe('Grok verification provider', () => {
     expect(result.needsHumanApproval).toBe(true);
     expect(global.fetch.mock.calls[0][0]).toBe('https://api.x.ai/v1/chat/completions');
     expect(JSON.parse(global.fetch.mock.calls[0][1].body).model).toBe('grok-test');
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).not.toHaveProperty('temperature');
   });
   test('provider errors fall back and still require human approval', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 401 });
