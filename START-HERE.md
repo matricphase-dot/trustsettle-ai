@@ -49,6 +49,37 @@ powershell -ExecutionPolicy Bypass -File scripts/push-to-github.ps1
 > The script runs `npm run preflight`, then `git init`, `commit`, `remote add origin`, and `git push -u origin main`. If GitHub asks to authenticate, sign in via browser (or use a Personal Access Token with `repo` scope as the password).
 > ✅ Confirm on GitHub that the **MIT license** appears in the right sidebar — Devpost requires a public repo with an open-source license.
 
+### 🔁 PATH B — You already ran GitHub's "create a new repository" quickstart commands
+
+GitHub's snippet only adds **one file** (`README.md`) and it **appends** a second `# trustsettle-ai` heading. It also arrives HTML-escaped (`&gt;&gt;`) and with markdown links (`[README.md](http://README.md)`) that break if pasted literally into a terminal.
+
+**Do NOT paste GitHub's snippet.** Do this instead — it adds every file and works even if you already pushed a README-only first commit:
+
+1. Extract **`trustsettle-ai-submission.zip`** into that **same folder** and allow it to **overwrite `README.md`** (this removes the duplicate heading).
+2. Run **one** command:
+
+```bash
+# macOS / Linux
+npm install && bash scripts/add-all-files.sh
+```
+```powershell
+# Windows PowerShell
+npm install; powershell -ExecutionPolicy Bypass -File scripts/add-all-files.ps1
+```
+
+Or paste these **clean plain commands** (no `echo` line, no `git init` if `.git` exists):
+
+```bash
+git add -A
+git commit -m "feat: TrustSettle AI Enterprise v2.0 — Programmable PayPal Escrow & Agentic Commerce"
+git branch -M main
+git remote add origin https://github.com/matricphase-dot/trustsettle-ai.git   # skip if origin already set
+git push -u origin main
+```
+
+> `git add -A` is the whole fix: it stages all **44** project files instead of just `README.md`. No `--force` needed, no history rewrite — your first commit stays intact and the project files become a normal second commit. `.gitignore` keeps `node_modules/` and `.env` out (only `.env.example` is public).
+> If the folder has no `.git` yet, run `git init -b main` first. If git says "author identity unknown", run `git config user.name "matricphase-dot"` and `git config user.email "you@example.com"`, then repeat the commit.
+
 ## ✅ STEP 3 — Deploy on Render (3 min)
 
 1. Open **`https://render.com/deploy?repo=https://github.com/matricphase-dot/trustsettle-ai`** (also the blue button at the top of `README.md`).
@@ -101,7 +132,8 @@ Upload to **YouTube (Public)** with captions ON, then paste the link into `SUBMI
 | `docs/architecture-diagram.svg` | README + Devpost gallery |
 | `docs/openapi.yaml` | OpenAPI 3.0 served at `/api/docs` |
 | `scripts/preflight-check.js` | `npm run preflight` compliance validator |
-| `scripts/push-to-github.sh` / `.ps1` | 1-command GitHub push |
+| `scripts/add-all-files.sh` / `.ps1` | **Use if you already ran GitHub's quickstart** — stages all 44 files, keeps your first commit |
+| `scripts/push-to-github.sh` / `.ps1` | 1-command GitHub push from a fresh folder |
 | `tests/escrow.test.js` | 8/8 Jest + Supertest integration/security tests |
 | `render.yaml` / `Dockerfile` / `docker-compose.yml` | 1-click deploy + Postgres production stack |
 
