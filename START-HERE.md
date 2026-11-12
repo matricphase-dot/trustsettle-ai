@@ -77,7 +77,7 @@ git remote add origin https://github.com/matricphase-dot/trustsettle-ai.git   # 
 git push -u origin main
 ```
 
-> `git add -A` is the whole fix: it stages all **44** project files instead of just `README.md`. No `--force` needed, no history rewrite — your first commit stays intact and the project files become a normal second commit. `.gitignore` keeps `node_modules/` and `.env` out (only `.env.example` is public).
+> `git add -A` is the whole fix: it stages **every project file** (source, tests, docs, SDK, CI, Docker, Render) instead of just `README.md`. No `--force` needed, no history rewrite — your first commit stays intact and the project files become a normal second commit. `.gitignore` keeps `node_modules/` and `.env` out (only `.env.example` is public).
 > If the folder has no `.git` yet, run `git init -b main` first. If git says "author identity unknown", run `git config user.name "matricphase-dot"` and `git config user.email "you@example.com"`, then repeat the commit.
 
 ## ✅ STEP 3 — Deploy on Render (3 min)
@@ -132,7 +132,7 @@ Upload to **YouTube (Public)** with captions ON, then paste the link into `SUBMI
 | `docs/architecture-diagram.svg` | README + Devpost gallery |
 | `docs/openapi.yaml` | OpenAPI 3.0 served at `/api/docs` |
 | `scripts/preflight-check.js` | `npm run preflight` compliance validator |
-| `scripts/add-all-files.sh` / `.ps1` | **Use if you already ran GitHub's quickstart** — stages all 44 files, keeps your first commit |
+| `scripts/add-all-files.sh` / `.ps1` | **Use if you already ran GitHub's quickstart** — stages every project file, keeps your first commit |
 | `scripts/push-to-github.sh` / `.ps1` | 1-command GitHub push from a fresh folder |
 | `tests/escrow.test.js` | 8/8 Jest + Supertest integration/security tests |
 | `render.yaml` / `Dockerfile` / `docker-compose.yml` | 1-click deploy + Postgres production stack |

@@ -38,5 +38,5 @@ fi
 git push -u origin main
 
 echo ""
-echo "✅ All 44 project files are live at https://github.com/matricphase-dot/trustsettle-ai"
+echo "✅ All project files are live at https://github.com/matricphase-dot/trustsettle-ai"
 echo "👉 Next: https://render.com/deploy?repo=https://github.com/matricphase-dot/trustsettle-ai"

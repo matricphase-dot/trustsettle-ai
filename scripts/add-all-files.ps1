@@ -40,5 +40,5 @@ git push -u origin main
 if ($LASTEXITCODE -ne 0) { throw "Push failed. Make sure the PUBLIC repo https://github.com/matricphase-dot/trustsettle-ai exists and you are signed in to GitHub (browser sign-in or a PAT with repo scope)." }
 
 Write-Host ""
-Write-Host "All 44 project files are live at https://github.com/matricphase-dot/trustsettle-ai" -ForegroundColor Green
+Write-Host "All project files are live at https://github.com/matricphase-dot/trustsettle-ai" -ForegroundColor Green
 Write-Host "Next: https://render.com/deploy?repo=https://github.com/matricphase-dot/trustsettle-ai" -ForegroundColor Yellow
