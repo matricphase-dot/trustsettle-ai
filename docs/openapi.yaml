@@ -1,0 +1,242 @@
+openapi: 3.0.3
+info:
+  title: TrustSettle AI — PayPal Programmable Escrow & Agentic Commerce API
+  version: 2.0.0
+  description: |
+    Production API for **TrustSettle AI** — PayPal-backed programmable escrow with Evidence-Grounded AI Verification, Human-in-the-Loop Release, Smart Partial-Capture Settlements, and Agent-to-Agent (MCP) Commerce.
+
+    ### Authentication
+    - **Bearer JWT**: `Authorization: Bearer <token>` (obtain via `POST /api/auth/token`)
+    - **Merchant Partner API Key**: `X-API-Key: ts_test_paypal_hackathon_2026`
+    - **Idempotency**: Pass `Idempotency-Key: <uuid>` on mutating PayPal operations (`/fund`, `/approve-release`, `/settle-accept`, `/void`).
+servers:
+  - url: /
+    description: Current Environment
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+paths:
+  /api/health:
+    get:
+      tags: [System]
+      summary: Health, PayPal/AI mode, trust invariants, and live escrow TVL metrics
+      responses:
+        '200':
+          description: Service healthy
+  /api/auth/token:
+    post:
+      tags: [Auth]
+      summary: Issue signed JWT for a role/persona (CLIENT, FREELANCER, ARBITRATOR, MERCHANT_ADMIN)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [CLIENT, FREELANCER, AGENT, ARBITRATOR, MERCHANT_ADMIN]
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Signed JWT token
+  /api/auth/api-keys:
+    post:
+      tags: [Auth]
+      summary: Provision a new B2B Merchant Partner API Key (MERCHANT_ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [merchantName]
+              properties:
+                merchantName: { type: string }
+      responses:
+        '201':
+          description: Created API key
+  /api/jobs:
+    get:
+      tags: [Escrow Jobs]
+      summary: List all escrow jobs with cryptographic audit integrity status
+      responses:
+        '200':
+          description: Job list
+    post:
+      tags: [Escrow Jobs]
+      summary: Create a new escrow contract (CLIENT or MERCHANT_ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, brief, budget]
+              properties:
+                title: { type: string, example: "Brand Identity & Vector Logo Pack" }
+                brief: { type: string, example: "3 concepts, AI/EPS source files, Figma handoff" }
+                budget: { type: number, example: 500 }
+                currency: { type: string, default: USD }
+      responses:
+        '201':
+          description: Escrow job created in DRAFT state
+  /api/jobs/{id}/fund:
+    post:
+      tags: [Escrow Jobs]
+      summary: Lock buyer funds via PayPal Orders v2 (intent AUTHORIZE)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: header
+          name: Idempotency-Key
+          schema: { type: string }
+      responses:
+        '200':
+          description: Funds held under PayPal Authorization
+  /api/jobs/{id}/deliver:
+    post:
+      tags: [Escrow Jobs]
+      summary: Submit freelancer or AI agent deliverable (quarantined as untrusted input)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [delivery]
+              properties:
+                delivery: { type: string }
+      responses:
+        '200':
+          description: Delivery recorded
+  /api/jobs/{id}/verify:
+    post:
+      tags: [AI Verification]
+      summary: Run Sanitizer + Deterministic Checks + AI Rubric Verification (never auto-releases funds)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Verification completed; transitions to PENDING_APPROVAL or REVISE
+  /api/jobs/{id}/approve-release:
+    post:
+      tags: [Human Gate & Settlement]
+      summary: Client/Arbitrator approves release -> Captures PayPal Authorization + Sends Payout
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: header
+          name: Idempotency-Key
+          schema: { type: string }
+      responses:
+        '200':
+          description: Captured and paid out
+  /api/jobs/{id}/reject-release:
+    post:
+      tags: [Human Gate & Settlement]
+      summary: Client rejects AI recommendation with mandatory logged reason (funds stay HELD)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Returned to REVISE state with logged reason
+  /api/jobs/{id}/settle-propose:
+    post:
+      tags: [Human Gate & Settlement]
+      summary: Propose proportional fair split based on AI rubric + deterministic evidence
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Fair split proposed
+  /api/jobs/{id}/settle-accept:
+    post:
+      tags: [Human Gate & Settlement]
+      summary: Execute split via PayPal Final Partial Capture (remainder auto-released to buyer) + Payout
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Settlement executed
+  /api/jobs/{id}/audit:
+    get:
+      tags: [Compliance & Audit]
+      summary: Retrieve SHA-256 hash-chained audit trail and verify tamper-evident integrity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Audit chain verified
+  /api/agents:
+    get:
+      tags: [Agentic Commerce & MCP]
+      summary: List verified AI Agents available for PayPal-escrowed A2A hiring
+      responses:
+        '200':
+          description: AI Agents list
+  /api/jobs/agent:
+    post:
+      tags: [Agentic Commerce & MCP]
+      summary: Hire an AI Agent with automatic PayPal Authorization hold & autonomous delivery
+      responses:
+        '201':
+          description: Agent hired and escrow funded
+  /api/mcp/tools:
+    get:
+      tags: [Agentic Commerce & MCP]
+      summary: Model Context Protocol (MCP) tool manifest for external AI agents
+      responses:
+        '200':
+          description: MCP tools manifest
+  /api/webhooks/paypal:
+    post:
+      tags: [Webhooks]
+      summary: Verified PayPal Webhook receiver (PAYMENT.AUTHORIZATION.*, PAYMENT.CAPTURE.*, PAYMENT.PAYOUTS-ITEM.*)
+      responses:
+        '200':
+          description: Webhook verified and reconciled

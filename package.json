@@ -1,0 +1,50 @@
+{
+  "name": "trustsettle-ai",
+  "version": "2.0.0",
+  "description": "TrustSettle AI — Production AI Escrow Platform for Freelancers & AI Agents. PayPal + AI + Human-in-the-Loop.",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/ tests/ --ext .js",
+    "preflight": "node scripts/preflight-check.js",
+    "db:migrate": "node src/db/migrate.js",
+    "db:seed": "node src/db/seed.js"
+  },
+  "keywords": ["paypal", "ai", "escrow", "agentic-commerce", "fintech"],
+  "author": "matricphase-dot (https://github.com/matricphase-dot)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/matricphase-dot/trustsettle-ai.git"
+  },
+  "homepage": "https://github.com/matricphase-dot/trustsettle-ai#readme",
+  "bugs": {
+    "url": "https://github.com/matricphase-dot/trustsettle-ai/issues"
+  },
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.12.0",
+    "pino": "^9.4.0",
+    "pino-pretty": "^11.2.5",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "eslint": "^9.9.0",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": { "testEnvironment": "node", "testTimeout": 10000 }
+}

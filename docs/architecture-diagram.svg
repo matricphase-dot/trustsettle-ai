@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 540" width="1100" height="540" style="background:#0B1026;font-family:Segoe UI,system-ui,sans-serif">
+  <defs>
+    <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0070E0"/>
+      <stop offset="50%" stop-color="#00C7B7"/>
+      <stop offset="100%" stop-color="#6C3BFF"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#00C7B7"/>
+    </marker>
+  </defs>
+
+  <!-- Header -->
+  <rect x="30" y="20" width="1040" height="62" rx="14" fill="#121A3A" stroke="#24305E"/>
+  <text x="55" y="48" fill="#FFFFFF" font-size="20" font-weight="800">TrustSettle AI Enterprise v2.0 — Programmable PayPal Escrow Architecture</text>
+  <text x="55" y="68" fill="#9AA8D0" font-size="12">AI Does the Homework (Evidence + Guardrails)  •  Human Makes the Call (JWT RBAC / Voice)  •  PayPal Moves the Money (Orders v2 Auth/Capture + Payouts)</text>
+
+  <!-- Box 1: Buyer / Marketplace SDK -->
+  <rect x="30" y="110" width="215" height="175" rx="14" fill="#121A3A" stroke="#0070E0" stroke-width="2"/>
+  <text x="48" y="138" fill="#38BDF8" font-size="14" font-weight="800">1. BUYER / PARTNER SDK</text>
+  <text x="48" y="162" fill="#EAF0FF" font-size="12">• Human Buyer or AI Agent</text>
+  <text x="48" y="182" fill="#EAF0FF" font-size="12">• Drop-in Checkout SDK</text>
+  <text x="48" y="202" fill="#EAF0FF" font-size="12">• Bearer JWT / X-API-Key</text>
+  <text x="48" y="222" fill="#EAF0FF" font-size="12">• Idempotency-Key Header</text>
+  <rect x="46" y="240" width="182" height="28" rx="7" fill="#003087"/>
+  <text x="58" y="258" fill="#FFFFFF" font-size="11" font-weight="700">POST /v2/checkout/orders</text>
+
+  <!-- Box 2: PayPal Authorization Locker -->
+  <rect x="290" y="110" width="225" height="175" rx="14" fill="#121A3A" stroke="#FFB020" stroke-width="2"/>
+  <text x="308" y="138" fill="#FFB020" font-size="14" font-weight="800">2. PAYPAL ESCROW HOLD</text>
+  <text x="308" y="162" fill="#EAF0FF" font-size="12">• intent: AUTHORIZE</text>
+  <text x="308" y="182" fill="#EAF0FF" font-size="12">• Funds Locked (Not Captured)</text>
+  <text x="308" y="202" fill="#EAF0FF" font-size="12">• Pre-delivery Void Support</text>
+  <text x="308" y="222" fill="#EAF0FF" font-size="12">• Integer-Cents TVL Ledger</text>
+  <rect x="306" y="240" width="192" height="28" rx="7" fill="#2E240A" stroke="#FFB020"/>
+  <text x="322" y="258" fill="#FFB020" font-size="11" font-weight="700">STATE: HELD ($500.00)</text>
+
+  <!-- Box 3: 5-Layer AI Verification -->
+  <rect x="560" y="110" width="245" height="175" rx="14" fill="#121A3A" stroke="#6C3BFF" stroke-width="2"/>
+  <text x="578" y="138" fill="#C4B5FD" font-size="14" font-weight="800">3. 5-LAYER AI VERIFIER</text>
+  <text x="578" y="162" fill="#EAF0FF" font-size="12">1. Prompt-Injection Sanitizer</text>
+  <text x="578" y="182" fill="#EAF0FF" font-size="12">2. Deterministic Code Checks</text>
+  <text x="578" y="202" fill="#EAF0FF" font-size="12">3. Gemini 2.0 Evidence Quotes</text>
+  <text x="578" y="222" fill="#EAF0FF" font-size="12">4. Calibrated Confidence %</text>
+  <rect x="576" y="240" width="212" height="28" rx="7" fill="#2A1A5E" stroke="#6C3BFF"/>
+  <text x="590" y="258" fill="#D9CCFF" font-size="11" font-weight="700">NEVER AUTO-RELEASES FUNDS</text>
+
+  <!-- Box 4: Human Gate + Settlement -->
+  <rect x="850" y="110" width="220" height="175" rx="14" fill="#121A3A" stroke="#00D68F" stroke-width="2"/>
+  <text x="868" y="138" fill="#00D68F" font-size="14" font-weight="800">4. HUMAN GATE &amp; PAYOUT</text>
+  <text x="868" y="162" fill="#EAF0FF" font-size="12">• Client JWT / Voice (HI/EN)</text>
+  <text x="868" y="182" fill="#EAF0FF" font-size="12">• Full Auth Capture + Payout</text>
+  <text x="868" y="202" fill="#EAF0FF" font-size="12">• Or Partial Final Capture</text>
+  <text x="868" y="222" fill="#EAF0FF" font-size="12">• 48h Anti-Ghosting SLA</text>
+  <rect x="866" y="240" width="188" height="28" rx="7" fill="#0A2E22" stroke="#00D68F"/>
+  <text x="880" y="258" fill="#00D68F" font-size="11" font-weight="700">CAPTURED + PAID OUT</text>
+
+  <!-- Connectors -->
+  <line x1="245" y1="195" x2="284" y2="195" stroke="#00C7B7" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="515" y1="195" x2="554" y2="195" stroke="#00C7B7" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="805" y1="195" x2="844" y2="195" stroke="#00C7B7" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Bottom Enterprise Layer -->
+  <rect x="30" y="325" width="330" height="180" rx="14" fill="#121A3A" stroke="#24305E"/>
+  <text x="50" y="355" fill="#00C7B7" font-size="14" font-weight="800">AGENT-TO-AGENT (A2A) &amp; MCP</text>
+  <text x="50" y="380" fill="#9AA8D0" font-size="12">• Agent Marketplace (Design, Code, Research)</text>
+  <text x="50" y="402" fill="#9AA8D0" font-size="12">• Model Context Protocol (/api/mcp/tools)</text>
+  <text x="50" y="424" fill="#9AA8D0" font-size="12">• External AI Agents hire &amp; deliver autonomously</text>
+  <text x="50" y="446" fill="#9AA8D0" font-size="12">• Human retains cryptographic capture control</text>
+  <text x="50" y="476" fill="#7DD3FC" font-family="monospace" font-size="11">GET /api/mcp/tools • POST /api/jobs/agent</text>
+
+  <rect x="385" y="325" width="330" height="180" rx="14" fill="#121A3A" stroke="#24305E"/>
+  <text x="405" y="355" fill="#00C7B7" font-size="14" font-weight="800">SECURITY, AUDIT &amp; STORAGE</text>
+  <text x="405" y="380" fill="#9AA8D0" font-size="12">• SHA-256 Hash-Chained Tamper-Evident Audit</text>
+  <text x="405" y="402" fill="#9AA8D0" font-size="12">• Dual Engine: PostgreSQL 16 + Atomic JSON</text>
+  <text x="405" y="424" fill="#9AA8D0" font-size="12">• Per-Job Mutex Locks + Idempotency Cache</text>
+  <text x="405" y="446" fill="#9AA8D0" font-size="12">• PayPal Webhook Signature Verification</text>
+  <text x="405" y="476" fill="#7DD3FC" font-family="monospace" font-size="11">GET /api/jobs/:id/audit • /api/webhooks/paypal</text>
+
+  <rect x="740" y="325" width="330" height="180" rx="14" fill="#121A3A" stroke="#24305E"/>
+  <text x="760" y="355" fill="#00C7B7" font-size="14" font-weight="800">OBSERVABILITY &amp; SPONSOR STACK</text>
+  <text x="760" y="380" fill="#9AA8D0" font-size="12">• AG Grid Double-Entry Escrow Ledger</text>
+  <text x="760" y="402" fill="#9AA8D0" font-size="12">• OpenAPI 3.0 / Swagger UI (/api/docs)</text>
+  <text x="760" y="424" fill="#9AA8D0" font-size="12">• Render 1-Click Cloud Blueprint (render.yaml)</text>
+  <text x="760" y="446" fill="#9AA8D0" font-size="12">• Prometheus Metrics + Jest/Supertest CI</text>
+  <text x="760" y="476" fill="#7DD3FC" font-family="monospace" font-size="11">GET /api/docs • GET /api/metrics • Docker</text>
+</svg>

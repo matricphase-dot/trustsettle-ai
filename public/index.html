@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrustSettle AI Enterprise — Programmable PayPal Escrow & Agentic Commerce</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/styles/ag-theme-alpine.css">
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/dist/ag-grid-community.min.js"></script>
+<script src="/sdk/trustsettle-sdk.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="logo">
+      <div class="logo-mark">T</div>
+      <div>
+        <h1>TrustSettle <span>AI</span></h1>
+        <p>PayPal Programmable Escrow • Enterprise v2.0</p>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge paypal" id="badgePaypal">PayPal Orders v2</span>
+      <span class="badge ai" id="badgeAi">✦ AI Verification</span>
+      <a class="badge link" href="/api/docs" target="_blank">📖 OpenAPI Docs</a>
+      <a class="badge link" href="/api/mcp/tools" target="_blank">🤖 MCP Tools</a>
+      <a class="badge link" href="https://github.com/matricphase-dot/trustsettle-ai" target="_blank">⭐ GitHub</a>
+      <span class="badge live"><span class="dot"></span>Production Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- Live Enterprise JWT / API-Key Role Bar -->
+<div class="role-bar">
+  <div class="role-inner">
+    <div>
+      <span style="font-size:12px;font-weight:700;color:#fff">🔐 Active Auth & RBAC Persona:</span>
+      <span class="mono" id="authStatus">Interactive Sandbox (All Actions Enabled)</span>
+    </div>
+    <div class="role-btns">
+      <button class="role-btn active" id="roleALL" onclick="switchPersona('ALL')">🔄 Interactive Demo</button>
+      <button class="role-btn" id="roleCLIENT" onclick="switchPersona('CLIENT')">👤 Buyer JWT (CLIENT)</button>
+      <button class="role-btn" id="roleFREELANCER" onclick="switchPersona('FREELANCER')">🎨 Freelancer JWT</button>
+      <button class="role-btn" id="roleARBITRATOR" onclick="switchPersona('ARBITRATOR')">⚖️ PayPal Ops JWT</button>
+      <button class="role-btn" id="roleAPIKEY" onclick="switchPersona('APIKEY')">🔑 Partner X-API-Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Real-Time Financial Invariants & TVL Strip -->
+<div class="kpi-strip">
+  <div class="kpi"><span>Total Locked (PayPal Auth TVL)</span><b id="kpiHeld" style="color:var(--amber)">$0.00</b></div>
+  <div class="kpi"><span>Total Captured & Paid Out</span><b id="kpiReleased" style="color:var(--green)">$0.00</b></div>
+  <div class="kpi"><span>Buyer Holds Released / Refunded</span><b id="kpiRefunded" style="color:var(--cyan)">$0.00</b></div>
+  <div class="kpi"><span>Audit Chain Integrity</span><b id="kpiAudit" style="color:var(--green)">SHA-256 VERIFIED ✓</b></div>
+</div>
+
+<section class="hero">
+  <h2>Programmable Escrow for <span class="grad">PayPal & AI Agents.</span></h2>
+  <p>PayPal <b>AUTHORIZE</b> locks the funds. Evidence-grounded AI verifies deliverables. <b style="color:#fff">Human sign-off or Smart Partial-Capture Settlement</b> moves the money — protected by RBAC, Idempotency & SHA-256 Audit Chains.</p>
+  <div class="mode-banner" id="modeBanner">Connecting to TrustSettle Enterprise Engine…</div>
+  <div class="trust-strip">
+    <span>🛡️ Evidence + Deterministic Guardrails</span>
+    <span>👤 Mandatory Human Gate</span>
+    <span>🔁 Idempotency-Key Safe</span>
+    <span>⛓️ SHA-256 Hash-Chained Audit</span>
+    <span>🤖 MCP + A2A Ready</span>
+  </div>
+</section>
+
+<main class="wrap">
+  <!-- Live PayPal Authorization State Stepper -->
+  <div class="stepper" id="stepper">
+    <div class="step-pill" id="st1">1. DRAFT CONTRACT</div>
+    <div class="step-pill" id="st2">2. PAYPAL AUTH HELD</div>
+    <div class="step-pill" id="st3">3. WORK DELIVERED</div>
+    <div class="step-pill" id="st4">4. AI VERIFIED</div>
+    <div class="step-pill" id="st5">5. HUMAN GATE / SLA</div>
+    <div class="step-pill" id="st6">6. CAPTURED & PAID</div>
+  </div>
+
+  <!-- Standout 1: Agent Marketplace (A2A) -->
+  <div class="card" style="border-color:var(--purple)">
+    <h3>🤖 Agent Marketplace — Agent-to-Agent (A2A) Escrow <span class="badge ai" style="font-size:10px;padding:4px 10px">MCP + PAYPAL PAYOUTS</span></h3>
+    <p class="sub">Hire autonomous AI agents with the exact same PayPal Authorization hold, rubric verification, and human approval gate.</p>
+    <div id="agentList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px"></div>
+  </div>
+
+  <!-- Step 1: Create & Fund -->
+  <div class="card" style="margin-top:20px">
+    <h3><span class="step-num">1</span> Create Escrow Contract & Lock PayPal Authorization (Buyer)</h3>
+    <p class="sub">Calls <code>POST /v2/checkout/orders</code> (<code>intent: AUTHORIZE</code>) with <code>Idempotency-Key</code>. Funds are locked on buyer's instrument, not yet captured.</p>
+    <div class="grid-2">
+      <div class="field"><label>Contract / Milestone Title</label><input id="jobTitle" value="Logo Design Pack — 3 concepts + AI/EPS source files"></div>
+      <div class="field"><label>Escrow Amount (USD)</label><input id="jobBudget" type="number" value="500" min="1"></div>
+    </div>
+    <div class="field"><label>Deliverable Brief & Acceptance Rubric</label><textarea id="jobBrief" rows="2">Modern minimal logo for a Mumbai coffee brand. 3 concepts, AI/EPS source files, Figma link, 48h delivery. Colors: navy + teal.</textarea></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary" id="btnCreate" onclick="createJob()">1. Create Contract</button>
+      <button class="btn btn-primary" id="btnFund" onclick="fundJob()" disabled>💳 2. Lock Funds via PayPal (AUTHORIZE)</button>
+      <button class="btn btn-ghost hidden" id="btnVoid" onclick="voidJob()">🚫 Void Hold (Cancel Before Delivery)</button>
+      <span class="mono" id="jobMeta">No active contract — create one or hire an AI agent above.</span>
+    </div>
+  </div>
+
+  <!-- Step 2: Delivery -->
+  <div class="card" style="margin-top:20px">
+    <h3><span class="step-num">2</span> Submit Deliverable (Freelancer / AI Agent)</h3>
+    <p class="sub">All submissions are quarantined as untrusted data. Test clean work, missing source files, or an adversarial prompt-injection attack.</p>
+    <div class="demo-controls">
+      <button class="preset active" id="presetGood" onclick="setPreset('good')">✅ Complete Delivery (91/100)</button>
+      <button class="preset" id="presetWeak" onclick="setPreset('weak')">⚠️ Partial / Missing Source (Revise + Split)</button>
+      <button class="preset" id="presetAttack" onclick="setPreset('attack')">🛡️ Prompt-Injection Attack</button>
+    </div>
+    <div class="field"><label>Deliverable Artifact URL & Notes</label><input id="delivery" value="https://figma.com/design/logo-pack — 3 concepts, AI/EPS source files attached, navy + teal palette"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" id="btnDeliver" onclick="deliverJob()" disabled>📦 Submit Deliverable</button>
+      <button class="btn btn-primary" id="btnVerify" onclick="verifyJob()" disabled>🤖 Run Multi-Agent AI Verification</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Verification + Human Gate + Smart Settlement -->
+  <div class="card" style="margin-top:20px">
+    <h3><span class="step-num">3</span> AI Evidence Report & Human Release Gate</h3>
+    <p class="sub">AI does the homework (evidence quotes + deterministic code checks). <b>Human makes the final call. PayPal executes the money movement.</b></p>
+    <div class="score-wrap">
+      <div class="score-ring" id="scoreRing"><div class="score-inner"><b id="scoreVal">—</b><span>Score / 100</span></div></div>
+      <div class="checklist">
+        <div class="check" id="c1"><span>Completeness (40%)</span><span class="pct">—</span></div>
+        <div class="check" id="c2"><span>Quality (30%)</span><span class="pct">—</span></div>
+        <div class="check" id="c3"><span>Originality (20%)</span><span class="pct">—</span></div>
+        <div class="check" id="c4"><span>Timeliness (10%)</span><span class="pct">—</span></div>
+        <div class="check" id="cConf"><span>Calibrated Confidence</span><span class="pct">—</span></div>
+      </div>
+    </div>
+    <div class="verdict hidden" id="verdict"></div>
+    <p class="mono" id="feedback" style="margin-top:10px"></p>
+
+    <div id="evidencePanel" class="hidden" style="margin-top:16px">
+      <h4 style="font-size:13px;margin-bottom:8px">🔍 Grounded Evidence Quotes (Anti-Hallucination)</h4>
+      <div id="evidenceList" style="font-size:13px"></div>
+      <h4 style="font-size:13px;margin:14px 0 8px">⚙️ Deterministic Code Guardrails (Cannot Hallucinate)</h4>
+      <div id="detList" style="font-size:13px"></div>
+      <p class="mono" id="auditMeta" style="margin-top:10px"></p>
+    </div>
+
+    <!-- Human Approval + Voice + SLA + Smart Settlement -->
+    <div id="humanGate" class="hidden" style="margin-top:18px;background:var(--bg);border:1px solid var(--amber);border-radius:14px;padding:18px">
+      <h4 style="font-size:15px;margin-bottom:6px">👤 Mandatory Human Sign-Off Gate</h4>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Funds remain locked under PayPal Authorization. Approve to trigger <code>POST /v2/payments/authorizations/{id}/capture</code> + <code>POST /v1/payments/payouts</code>, or reject with a logged reason.</p>
+      <div class="field"><label>Mandatory Rejection Reason (Anti-Abuse Audit Log)</label><input id="rejectReason" placeholder="e.g. Editable vector AI/EPS file missing from archive"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="btnApprove" onclick="approveRelease()">✅ Approve & Release (Capture + Payout)</button>
+        <button class="btn btn-ghost" id="btnReject" onclick="rejectRelease()">❌ Reject with Reason (Keep Held)</button>
+        <button class="btn btn-ghost" id="btnVoice" onclick="voiceApprove()">🎤 Voice Approve (Hindi / English)</button>
+        <button class="btn btn-ghost" onclick="simulateSlaExpiry()">⏰ Simulate 48h Buyer Ghosting</button>
+      </div>
+      <p class="mono" id="voiceStatus" style="margin-top:8px"></p>
+      <p class="mono" id="deadlineInfo" style="margin-top:6px"></p>
+    </div>
+
+    <!-- Smart Settlement Panel (Always available once verified for REVISE or PENDING_APPROVAL!) -->
+    <div id="settlementActions" class="hidden" style="margin-top:14px">
+      <button class="btn btn-ghost" onclick="proposeSettlement()">⚖️ Propose AI Fair Split Settlement (Partial Final Capture)</button>
+    </div>
+    <div id="settlementPanel" class="hidden" style="margin-top:14px;background:var(--bg);border:1px solid var(--cyan);border-radius:14px;padding:16px">
+      <h4 style="font-size:14px;margin-bottom:6px;color:var(--cyan)">⚖️ Smart Partial-Capture Settlement Proposal</h4>
+      <p id="settlementText" style="font-size:13px;color:var(--text)"></p>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="acceptSettlement()">✅ Execute Fair Split via PayPal Partial Final Capture</button>
+        <button class="btn btn-ghost" onclick="proposeSettlement()">↻ Recalculate Split</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+      <button class="btn btn-ghost hidden" id="btnRevise" onclick="reviseJob()">📝 Send AI Revision Feedback (Keep Held)</button>
+      <button class="btn btn-ghost" onclick="resetAll()">↺ Reset Sandbox Data</button>
+    </div>
+
+    <div class="money-row" style="margin-top:18px">
+      <div class="money-box held"><b id="heldAmt">$0</b><span>HELD (Auth Lock)</span></div>
+      <div class="arrow">→</div>
+      <div class="money-box released"><b id="releasedAmt">$0</b><span>CAPTURED & PAID</span></div>
+      <div class="arrow">|</div>
+      <div class="money-box refunded"><b id="refundedAmt">$0</b><span>RELEASED TO BUYER</span></div>
+    </div>
+  </div>
+
+  <!-- Two-Column Enterprise Telemetry: Console + Cryptographic Audit Chain -->
+  <div class="grid-2" style="margin-top:20px;grid-template-columns:1fr 1fr">
+    <div class="card">
+      <h3>🤖 Live Execution Telemetry</h3>
+      <div class="console" id="console">
+        <div class="line"><span class="time">--:--</span><span class="agent system">[SYSTEM]</span><span>TrustSettle Enterprise v2.0 initialized.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>⛓️ SHA-256 Tamper-Evident Audit Chain <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px;margin-left:auto" onclick="verifyChainNow()">Verify Hashes</button></h3>
+      <div class="audit-chain" id="auditChainBox">
+        <div class="mono">Create or select a job to inspect its cryptographic SHA-256 hash chain.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AG Grid Double-Entry Escrow Ledger -->
+  <h2 class="section-title">Double-Entry Escrow Ledger — AG Grid</h2>
+  <p class="section-sub">Every PayPal Authorization hold, partial/full capture, buyer hold release, and freelancer/agent payout recorded in integer cents.</p>
+  <div id="ledgerGrid" class="ag-theme-alpine" style="height:320px;width:100%;border-radius:14px;overflow:hidden"></div>
+  <p class="mono" style="margin-top:10px">Provider Trust Score: <b id="trustScore" style="color:var(--green)">98/100 ★ Verified</b> &nbsp;|&nbsp; Active Contracts: <span id="jobCount">0</span> &nbsp;|&nbsp; Ledger Entries: <span id="ledgerCount">0</span></p>
+
+  <!-- Embeddable PayPal Partner Merchant SDK Live Demo -->
+  <h2 class="section-title">Drop-In PayPal Partner Checkout SDK</h2>
+  <p class="section-sub">How PayPal & marketplaces (Upwork, Fiverr, B2B SaaS) embed TrustSettle in 5 lines of code using <code>X-API-Key</code> + <code>Idempotency-Key</code>.</p>
+  <div class="grid-2" style="grid-template-columns:1fr 1.2fr;align-items:start">
+    <div id="merchantSdkMount"></div>
+    <div class="tech">
+      <h4>Embed in Any Marketplace or PayPal Checkout</h4>
+      <p>Click the live widget on the left — it authenticates with Partner API Key <code>ts_test_paypal_hackathon_2026</code> and locks a $250 PayPal Authorization right into the ledger above!</p>
+      <code>&lt;script src="https://trustsettle.ai/sdk/trustsettle-sdk.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  TrustSettle.mount('#checkout', {
+    apiKey: 'ts_live_partner_key',
+    title: 'Web App Milestone #1',
+    budget: 250,
+    onFunded: (res) =&gt; console.log('Auth ID:', res.paypal.authorizationId)
+  });
+&lt;/script&gt;</code>
+    </div>
+  </div>
+
+  <!-- Enterprise Architecture Grid -->
+  <h2 class="section-title">Why PayPal Can Deploy This Tomorrow</h2>
+  <div class="tech-grid">
+    <div class="tech"><h4>💳 Native PayPal Payments v2</h4><p>Uses real <code>intent: AUTHORIZE</code> → <code>/v2/payments/authorizations/{id}/capture</code> (including fee-free Partial Final Captures for splits) + Payouts v1 + Webhook verification.</p></div>
+    <div class="tech"><h4>🔐 JWT RBAC + Partner API Keys</h4><p>Strict role separation (<code>CLIENT</code>, <code>FREELANCER</code>, <code>ARBITRATOR</code>, <code>MERCHANT_ADMIN</code>). Freelancers cannot approve their own payouts.</p></div>
+    <div class="tech"><h4>🔁 Idempotency & Mutex Locks</h4><p><code>Idempotency-Key</code> replay cache + per-job concurrency locks + integer-cents accounting eliminate double-captures and rounding bugs.</p></div>
+    <div class="tech"><h4>⛓️ Tamper-Evident Audit & SLA</h4><p>Every AI score, evidence quote, and human decision is linked in a SHA-256 hash chain, backed by a 48h anti-ghosting SLA worker.</p></div>
+  </div>
+</main>
+
+<footer>
+  <p><b style="color:#fff">TrustSettle AI Enterprise v2.0</b> — Programmable Escrow for Humans & AI Agents • Built for PayPal AI Hackathon 2026 🏆</p>
+</footer>
+
+<div class="toast hidden" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
