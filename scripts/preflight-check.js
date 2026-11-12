@@ -45,9 +45,9 @@ check(
   true
 );
 check(
-  'Gemini 2.0 Flash API Key (GEMINI_API_KEY)',
-  config.ai.hasGemini,
-  config.ai.hasGemini ? 'LIVE Gemini 2.0 Flash' : 'Using Deterministic Rubric fallback — paste GEMINI_API_KEY in Render Env Vars for live LLM!',
+  'AI provider key (XAI_API_KEY or GEMINI_API_KEY)',
+  config.ai.hasXai || config.ai.hasGemini,
+  config.ai.hasXai ? 'xAI configured (connection not checked)' : config.ai.hasGemini ? 'Gemini configured (connection not checked)' : 'Using deterministic rubric fallback — configure an AI key for live evaluation',
   true
 );
 

@@ -17,5 +17,7 @@ services:
         sync: false
       - key: PAYPAL_CLIENT_SECRET
         sync: false
+      - key: XAI_API_KEY
+        sync: false
       - key: GEMINI_API_KEY
         sync: false

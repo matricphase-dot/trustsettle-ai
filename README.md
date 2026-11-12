@@ -56,7 +56,11 @@ npm start       # Starts server on http://0.0.0.0:3000
 Copy `.env.example` to `.env` and set:
 - `PAYPAL_CLIENT_ID` & `PAYPAL_CLIENT_SECRET` (`PAYPAL_ENV=sandbox` or `live`)
 - `PAYPAL_WEBHOOK_ID` (for cryptographic webhook signature checks)
-- `GEMINI_API_KEY` (enables live Gemini 2.0 Flash rubric evaluation)
+- `XAI_API_KEY` (enables Grok evaluation; takes precedence over Gemini)
+- `XAI_MODEL` (optional; defaults to `grok-3-mini`; choose a model available to your xAI account)
+- `GEMINI_API_KEY` (optional alternative for Gemini evaluation)
+
+When the configured AI provider fails, verification falls back to the deterministic rubric. Provider configuration alone does not verify API connectivity. Human approval remains required.
 - `DATABASE_URL` (switches automatically from atomic JSON store to PostgreSQL 16; run `npm run db:migrate`)
 
 ### Docker + PostgreSQL 16 Deployment

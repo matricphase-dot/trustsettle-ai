@@ -111,20 +111,20 @@ function heuristicScore(brief, delivery) {
       originality: d.includes('template') ? 'Template reuse indicator detected' : 'Original deliverable link & distinct brief alignment',
       timeliness: 'Submitted within active PayPal escrow SLA window',
     },
-    reasoning: 'Deterministic + rubric scoring engine (configure GEMINI_API_KEY for live Gemini 2.0 Flash evaluation).',
+    reasoning: 'Deterministic + rubric scoring engine (configure XAI_API_KEY or GEMINI_API_KEY for live model evaluation).',
   };
 }
 
 function validateLLMOutput(parsed) {
   for (const k of ['completeness', 'quality', 'originality', 'timeliness']) {
     const v = Number(parsed?.[k]);
-    if (Number.isNaN(v) || v < 0 || v > 100) return false;
+    if (parsed?.[k] == null || !Number.isFinite(v) || v < 0 || v > 100) return false;
   }
   return true;
 }
 
-async function geminiScore(brief, sanitizedDelivery) {
-  const prompt = `You are the Enterprise Verification Agent for TrustSettle AI (PayPal Escrow). Score the freelancer/agent delivery strictly against the buyer brief.
+function verificationPrompt(brief, sanitizedDelivery) {
+  return `You are the Enterprise Verification Agent for TrustSettle AI (PayPal Escrow). Score the freelancer/agent delivery strictly against the buyer brief.
 
 Rules:
 1. Score ONLY verifiable claims/links in DELIVERY. Never invent missing items.
@@ -140,7 +140,10 @@ ${sanitizedDelivery}
 
 Return ONLY valid JSON:
 {"completeness":0-100,"quality":0-100,"originality":0-100,"timeliness":0-100,"total":0-100,"evidence":{"completeness":"...","quality":"...","originality":"...","timeliness":"..."},"reasoning":"one concise sentence"}`;
+}
 
+async function geminiScore(brief, sanitizedDelivery) {
+  const prompt = verificationPrompt(brief, sanitizedDelivery);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.ai.geminiKey}`;
   for (let attempt = 1; attempt <= 2; attempt++) {
     const res = await fetch(url, {
@@ -176,6 +179,34 @@ Return ONLY valid JSON:
   }
 }
 
+
+async function xaiScore(brief, sanitizedDelivery) {
+  const res = await fetch('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.ai.xaiKey}` },
+    body: JSON.stringify({
+      model: config.ai.xaiModel,
+      messages: [{ role: 'user', content: verificationPrompt(brief, sanitizedDelivery) }],
+      response_format: { type: 'json_object' },
+      temperature: 0,
+    }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`xAI HTTP ${res.status}`);
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content || '';
+  const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+  if (!validateLLMOutput(parsed)) throw new Error('xAI schema validation failed');
+  const completeness = Number(parsed.completeness), quality = Number(parsed.quality);
+  const originality = Number(parsed.originality), timeliness = Number(parsed.timeliness);
+  return {
+    completeness, quality, originality, timeliness,
+    total: Math.round(completeness * 0.4 + quality * 0.3 + originality * 0.2 + timeliness * 0.1),
+    evidence: parsed.evidence && typeof parsed.evidence === 'object' ? parsed.evidence : {},
+    reasoning: typeof parsed.reasoning === 'string' ? parsed.reasoning : 'Evaluated by Grok',
+  };
+}
+
 function collectRiskFlags(delivery, det, injectionHits) {
   const d = String(delivery || '').toLowerCase();
   const flags = [];
@@ -191,7 +222,7 @@ function collectRiskFlags(delivery, det, injectionHits) {
 
 function computeConfidence(scores, det, flags, mode) {
   let conf = 78;
-  if (mode === 'gemini') conf += 8;
+  if (mode === 'gemini' || mode === 'xai') conf += 8;
   if (det.coverage >= 25) conf += 7;
   if (det.hasLink) conf += 5;
   if (flags.length === 0) conf += 5;
@@ -214,7 +245,16 @@ async function verifyDelivery(brief, delivery) {
 
   let scores;
   let mode = 'deterministic-rubric';
-  if (config.ai.hasGemini) {
+  if (config.ai.hasXai) {
+    try {
+      scores = await xaiScore(brief, cleaned);
+      mode = 'xai';
+    } catch (err) {
+      logger.warn({ err: err.message }, 'xAI unavailable, falling back to deterministic rubric');
+      scores = heuristicScore(brief, cleaned);
+      mode = 'rubric-fallback';
+    }
+  } else if (config.ai.hasGemini) {
     try {
       scores = await geminiScore(brief, cleaned);
       mode = 'gemini';
@@ -254,7 +294,7 @@ async function verifyDelivery(brief, delivery) {
     feedback,
     agents: ['Sanitizer Guard', 'Deterministic Validator', 'Verification Agent', 'Risk Agent', 'Comms Agent'],
     audit: {
-      model: mode === 'gemini' ? 'gemini-2.0-flash' : 'trustsettle-rubric-v3',
+      model: mode === 'xai' ? config.ai.xaiModel : mode === 'gemini' ? 'gemini-2.0-flash' : 'trustsettle-rubric-v3',
       promptVersion: PROMPT_VERSION,
       inputHash: hashInput(brief, delivery),
       verifiedAt: new Date().toISOString(),
@@ -317,4 +357,5 @@ module.exports = {
   deterministicChecks,
   sanitizeDelivery,
   hasGemini: config.ai.hasGemini,
+  hasXai: config.ai.hasXai,
 };

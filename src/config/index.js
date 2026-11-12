@@ -20,6 +20,8 @@ const config = {
   },
   ai: {
     geminiKey: process.env.GEMINI_API_KEY || '',
+    xaiKey: process.env.XAI_API_KEY || '',
+    xaiModel: process.env.XAI_MODEL || 'grok-3-mini',
   },
   security: {
     rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 900000),
@@ -31,6 +33,7 @@ config.paypal.isLive = Boolean(
   config.paypal.clientId && config.paypal.clientSecret &&
   config.paypal.clientId !== 'your_paypal_client_id'
 );
+config.ai.hasXai = Boolean(config.ai.xaiKey && config.ai.xaiKey !== 'your_xai_api_key');
 config.ai.hasGemini = Boolean(config.ai.geminiKey && config.ai.geminiKey !== 'your_gemini_api_key');
 config.db.isPostgres = Boolean(config.db.url);
 
