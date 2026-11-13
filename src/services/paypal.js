@@ -146,10 +146,11 @@ async function authorizeApprovedOrder(orderId, idempotencyKey) {
   }
   const data = await paypalRequest('POST', `/v2/checkout/orders/${orderId}/authorize`, {}, idempotencyKey ? `auth-${idempotencyKey}` : undefined);
   const authObj = data?.purchase_units?.[0]?.payments?.authorizations?.[0];
+  if (!authObj?.id || !['CREATED', 'AUTHORIZED'].includes(authObj.status)) throw new Error('PayPal did not confirm an authorization');
   return {
     mode: config.paypal.env,
     orderId: data.id,
-    authorizationId: authObj?.id || data.id,
+    authorizationId: authObj.id,
     status: authObj?.status || data.status,
     raw: data,
   };
@@ -161,6 +162,7 @@ async function authorizeApprovedOrder(orderId, idempotencyKey) {
  * releases any uncaptured remainder back to the buyer without refund fees!
  */
 async function captureAuthorization({ authorizationId, orderId, amount, currency = 'USD', finalCapture = true, idempotencyKey }) {
+  if (!authorizationId) throw new Error('PayPal authorization ID is required before capture');
   const ref = authorizationId || orderId;
   if (!config.paypal.isLive || !ref || String(ref).includes('SIM') || String(ref).includes('DEMO')) {
     return {

@@ -214,9 +214,15 @@ async function fundJob() {
       method: 'POST',
       headers: { 'Idempotency-Key': key },
     });
-    log('PAYPAL', 'paypal', `Locked $${data.job.budget} • Order ${data.paypal.orderId} • Auth ${data.paypal.authorizationId}`);
     refreshJobUI(data.job);
-    toast(`💳 PayPal Authorization Locked: $${data.job.budget} HELD`);
+    if (data.job.status === 'AWAITING_PAYPAL_APPROVAL') {
+      log('PAYPAL', 'paypal', `Buyer approval required for order ${data.paypal.orderId}; no funds held yet.`);
+      toast('PayPal buyer approval required. Redirecting to sandbox checkout.');
+      window.location.assign(data.paypal.approveUrl);
+    } else {
+      log('PAYPAL', 'paypal', `Authorization confirmed: ${data.paypal.authorizationId}`);
+      toast(`PayPal authorization confirmed: $${data.job.budget} held`);
+    }
   } catch (e) {
     toast('❌ ' + e.message);
     log('RISK', 'risk', e.message);
@@ -585,3 +591,14 @@ checkHealth();
 loadAgents();
 refreshLedger();
 refreshCounts();
+
+(async function restorePayPalReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const jobId = params.get('jobId');
+  if (!jobId) return;
+  try {
+    const data = await api(`/api/jobs/${encodeURIComponent(jobId)}`);
+    refreshJobUI(data.job);
+    toast(params.get('paypalStatus') === 'approved' ? 'PayPal authorization confirmed.' : 'PayPal checkout cancelled or pending.');
+  } catch (err) { toast('Unable to load checkout: ' + err.message); }
+})();

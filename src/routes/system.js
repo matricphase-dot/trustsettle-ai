@@ -104,17 +104,25 @@ router.post('/webhooks/paypal', async (req, res, next) => {
 // PayPal Return / Cancel callbacks for live checkout redirect flow
 router.get('/paypal/return', async (req, res) => {
   const { jobId, token } = req.query;
-  if (jobId && token) {
-    const job = db.getJob(jobId);
-    if (job) {
-      try {
-        const auth = await paypal.authorizeApprovedOrder(token, `return-${job.id}`);
-        db.updateJob(job.id, { authorizationId: auth.authorizationId, status: 'HELD' });
-        db.appendAudit(job.id, { actor: 'paypal-return', role: 'PAYPAL', action: 'BUYER_CHECKOUT_APPROVED', detail: auth.authorizationId });
-      } catch (_e) { /* handled in UI */ }
-    }
+  if (typeof jobId !== 'string' || typeof token !== 'string') return res.status(400).send('Missing PayPal order or job ID');
+  try {
+    const result = await db.withJobLock(jobId, async () => {
+      const job = db.getJob(jobId);
+      if (!job || job.orderId !== token) return 'invalid';
+      if (job.status === 'HELD' && job.authorizationId) return 'approved';
+      if (job.status !== 'AWAITING_PAYPAL_APPROVAL') return 'invalid';
+      const auth = await paypal.authorizeApprovedOrder(token, `return-${job.id}`);
+      if (!auth.authorizationId || !['CREATED', 'AUTHORIZED'].includes(auth.status)) return 'failed';
+      db.updateJob(job.id, { authorizationId: auth.authorizationId, heldCents: job.budgetCents, status: 'HELD' });
+      db.addLedger({ jobId: job.id, jobTitle: job.title, entryType: 'DEBIT_HOLD', event: 'Authorize (Hold)', amountCents: job.budgetCents, currency: job.currency, status: 'HELD', paypalId: auth.authorizationId, mode: auth.mode, actor: 'paypal-return' });
+      db.appendAudit(job.id, { actor: 'paypal-return', role: 'PAYPAL', action: 'AUTHORIZATION_HELD', detail: `PayPal authorization ${auth.authorizationId} confirmed` });
+      return 'approved';
+    });
+    if (result !== 'approved') return res.status(400).send('PayPal approval could not be confirmed. No hold recorded.');
+    res.redirect(`/?jobId=${encodeURIComponent(jobId)}&paypalStatus=approved`);
+  } catch (_err) {
+    res.status(502).send('PayPal authorization failed. No hold recorded; contact the merchant before retrying.');
   }
-  res.redirect(`/?jobId=${encodeURIComponent(jobId || '')}&paypalStatus=approved`);
 });
 
 router.get('/paypal/cancel', (req, res) => {

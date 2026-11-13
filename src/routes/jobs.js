@@ -88,14 +88,19 @@ router.post('/:id/fund', authenticate, requireRole(['CLIENT', 'MERCHANT_ADMIN'])
         idempotencyKey: req.idempotencyKey || `fund-${job.id}`,
       });
 
+      const authorized = Boolean(pp.authorizationId && ['AUTHORIZED', 'CREATED'].includes(pp.status));
+      if (!authorized && !pp.approveUrl) throw new Error('PayPal returned neither authorization nor buyer approval URL');
       const updated = db.updateJob(job.id, {
         orderId: pp.orderId,
         authorizationId: pp.authorizationId,
         approveUrl: pp.approveUrl,
-        heldCents: job.budgetCents,
-        status: 'HELD',
+        heldCents: authorized ? job.budgetCents : 0,
+        status: authorized ? 'HELD' : 'AWAITING_PAYPAL_APPROVAL',
       });
-
+      if (!authorized) {
+        db.appendAudit(job.id, { actor: 'paypal-orders-v2', role: 'PAYPAL', action: 'BUYER_APPROVAL_REQUIRED', detail: `Order ${pp.orderId}; no funds authorized yet` });
+        return { status: 200, body: { job: formatJob(db.getJob(job.id)), paypal: pp } };
+      }
       db.addLedger({
         jobId: job.id,
         jobTitle: job.title,
@@ -130,6 +135,7 @@ router.post('/:id/deliver', authenticate, requireRole(['FREELANCER', 'AGENT', 'M
     const out = await db.withJobLock(req.params.id, async () => {
       const job = db.getJob(req.params.id);
       if (!job) return { status: 404, body: { error: 'Job not found', code: 'JOB_NOT_FOUND' } };
+      if (!job.authorizationId || job.heldCents <= 0) return { status: 409, body: { error: 'PayPal authorization required before delivery', code: 'AUTHORIZATION_REQUIRED' } };
       if (!['HELD', 'REVISE', 'DELIVERED'].includes(job.status)) {
         return { status: 409, body: { error: `Escrow must be HELD or REVISE before delivery (current: ${job.status})`, code: 'INVALID_STATE' } };
       }
@@ -161,6 +167,7 @@ router.post('/:id/verify', authenticate, async (req, res, next) => {
     const out = await db.withJobLock(req.params.id, async () => {
       const job = db.getJob(req.params.id);
       if (!job) return { status: 404, body: { error: 'Job not found', code: 'JOB_NOT_FOUND' } };
+      if (!job.authorizationId || job.heldCents <= 0) return { status: 409, body: { error: 'PayPal authorization required', code: 'AUTHORIZATION_REQUIRED' } };
       if (!job.delivery) return { status: 400, body: { error: 'No delivery submitted yet', code: 'MISSING_DELIVERY' } };
       if (['RELEASED', 'SETTLED', 'VOIDED', 'REFUNDED'].includes(job.status)) {
         return { status: 409, body: { error: `Job already finalized (${job.status})`, code: 'ALREADY_FINALIZED' } };
@@ -222,6 +229,7 @@ router.post('/:id/approve-release', authenticate, requireRole(['CLIENT', 'ARBITR
         };
       }
 
+      if (!job.authorizationId || job.heldCents <= 0) return { status: 409, body: { error: 'PayPal authorization required before capture', code: 'AUTHORIZATION_REQUIRED' } };
       const capture = await paypal.captureAuthorization({
         authorizationId: job.authorizationId,
         orderId: job.orderId,
@@ -440,6 +448,7 @@ router.post('/:id/settle-accept', authenticate, requireRole(['CLIENT', 'ARBITRAT
 
       const s = job.settlement;
       // Partial final capture on Authorization: captures ONLY freelancerAmount and automatically releases refundAmount hold!
+      if (!job.authorizationId || job.heldCents <= 0) return { status: 409, body: { error: 'PayPal authorization required before capture', code: 'AUTHORIZATION_REQUIRED' } };
       const capture = await paypal.captureAuthorization({
         authorizationId: job.authorizationId,
         orderId: job.orderId,

@@ -24,6 +24,7 @@ router.get('/agents', (_req, res) => {
 
 router.post('/jobs/agent', authenticate, idempotency, validate(hireAgentSchema), async (req, res, next) => {
   try {
+    if (paypal.isLive) return res.status(503).json({ error: 'Agent checkout requires buyer approval and is not yet available in connected PayPal mode', code: 'CHECKOUT_UNAVAILABLE' });
     const { agentId, title, brief } = req.validated;
     const agent = db.getAgent(agentId);
     if (!agent) return res.status(404).json({ error: 'AI Agent not found in marketplace', code: 'AGENT_NOT_FOUND' });
@@ -170,6 +171,7 @@ router.post('/mcp/call', authenticate, async (req, res, next) => {
   try {
     const { tool, arguments: args = {} } = req.body || {};
     if (tool === 'trustsettle_create_escrow') {
+      if (paypal.isLive) return res.status(503).json({ error: 'MCP checkout is unavailable in connected PayPal mode; use standard buyer checkout', code: 'CHECKOUT_UNAVAILABLE' });
       const job = db.createJob({
         title: args.title || 'MCP Escrow Task',
         brief: args.brief || 'Deliverables per agentic specification',

@@ -4,7 +4,7 @@ require('dotenv').config();
 const config = {
   env: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 3000),
-  appUrl: process.env.APP_URL || 'http://localhost:3000',
+  appUrl: process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000',
   jwt: {
     secret: process.env.JWT_SECRET || 'dev-only-secret-change-in-prod',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
