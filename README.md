@@ -56,7 +56,9 @@ npm start       # Starts server on http://0.0.0.0:3000
 Copy `.env.example` to `.env` and set:
 - `PAYPAL_CLIENT_ID` & `PAYPAL_CLIENT_SECRET` (`PAYPAL_ENV=sandbox` or `live`)
 - `PAYPAL_WEBHOOK_ID` (for cryptographic webhook signature checks)
-- `XAI_API_KEY` (enables Grok evaluation; takes precedence over Gemini)
+- `GROQ_API_KEY` (enables Groq evaluation; takes precedence over xAI and Gemini)
+- `GROQ_MODEL` (optional; defaults to `qwen/qwen3.8-27b`; must be available to your Groq project)
+- `XAI_API_KEY` (enables xAI Grok evaluation; takes precedence over Gemini)
 - `XAI_MODEL` (optional; defaults to `grok-3-mini`; choose a model available to your xAI account)
 - `GEMINI_API_KEY` (optional alternative for Gemini evaluation)
 

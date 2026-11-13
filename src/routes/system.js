@@ -17,7 +17,7 @@ router.get('/health', (_req, res) => {
     version: '2.0.0',
     uptimeSec: Math.round((Date.now() - startedAt) / 1000),
     paypalMode: paypal.isLive ? `${paypal.env}-live` : 'demo',
-    aiMode: ai.hasXai ? 'xai' : ai.hasGemini ? 'gemini' : 'deterministic-rubric',
+    aiMode: ai.hasGroq ? 'groq' : ai.hasXai ? 'xai' : ai.hasGemini ? 'gemini' : 'deterministic-rubric',
     dbAdapter: metrics.adapter,
     trustInvariants: {
       humanApprovalRequired: true,

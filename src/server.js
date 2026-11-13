@@ -11,7 +11,7 @@ const server = app.listen(config.port, '0.0.0.0', () => {
   logger.info({
     port: config.port,
     paypalMode: config.paypal.isLive ? `${config.paypal.env}-live` : 'demo',
-    aiMode: config.ai.hasXai ? config.ai.xaiModel : config.ai.hasGemini ? 'gemini-2.0-flash' : 'deterministic-rubric',
+    aiMode: config.ai.hasGroq ? config.ai.groqModel : config.ai.hasXai ? config.ai.xaiModel : config.ai.hasGemini ? 'gemini-2.0-flash' : 'deterministic-rubric',
     dbMode: config.db.isPostgres ? 'postgresql' : 'atomic-json',
   }, 'TrustSettle AI v2.0 Enterprise Server listening');
 
@@ -21,7 +21,7 @@ const server = app.listen(config.port, '0.0.0.0', () => {
   console.log(`  OpenAPI / Swagger : http://0.0.0.0:${config.port}/api/docs`);
   console.log(`  MCP Agent Tools   : http://0.0.0.0:${config.port}/api/mcp/tools`);
   console.log(`  PayPal Mode       : ${config.paypal.isLive ? 'SANDBOX/LIVE API' : 'SIMULATED SANDBOX (set PAYPAL_CLIENT_ID for live)'}`);
-  console.log(`  AI Engine         : ${config.ai.hasXai ? 'GROK + GUARDRAILS' : config.ai.hasGemini ? 'GEMINI 2.0 FLASH + GUARDRAILS' : 'DETERMINISTIC RUBRIC + GUARDRAILS'}`);
+  console.log(`  AI Engine         : ${config.ai.hasGroq ? 'GROQ + GUARDRAILS' : config.ai.hasXai ? 'GROK + GUARDRAILS' : config.ai.hasGemini ? 'GEMINI 2.0 FLASH + GUARDRAILS' : 'DETERMINISTIC RUBRIC + GUARDRAILS'}`);
   console.log(`==================================================================\n`);
 });
 

@@ -28,3 +28,18 @@ describe('Grok verification provider', () => {
     expect(result.needsHumanApproval).toBe(true);
   });
 });
+
+test('Groq key uses Groq endpoint and the allowed model rather than xAI', async () => {
+  const env = process.env, oldFetch = global.fetch;
+  try {
+    jest.resetModules();
+    process.env = { ...env, GROQ_API_KEY: 'test-groq-key', GROQ_MODEL: 'qwen/qwen3.8-27b', XAI_API_KEY: 'test-xai-key' };
+    const score = { completeness: 90, quality: 90, originality: 90, timeliness: 90 };
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(score) } }] }) });
+    const result = await require('../src/services/ai').verifyDelivery('Create source files', 'Source files at https://github.com/example/repo');
+    expect(result.mode).toBe('groq');
+    expect(result.needsHumanApproval).toBe(true);
+    expect(global.fetch.mock.calls[0][0]).toBe('https://api.groq.com/openai/v1/chat/completions');
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body).model).toBe('qwen/qwen3.8-27b');
+  } finally { process.env = env; global.fetch = oldFetch; }
+});

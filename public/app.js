@@ -65,7 +65,7 @@ async function checkHealth() {
   try {
     const h = await api('/api/health');
     $('badgePaypal').textContent = h.paypalMode.includes('live') ? 'PayPal Orders v2 • LIVE' : 'PayPal Orders v2 • SANDBOX SIM';
-    $('badgeAi').textContent = h.aiMode === 'xai' ? '✦ Grok • configured' : h.aiMode === 'gemini' ? '✦ Gemini 2.0 • configured' : '✦ Deterministic + AI Rubric';
+    $('badgeAi').textContent = h.aiMode === 'groq' ? '✦ Groq • configured' : h.aiMode === 'xai' ? '✦ Grok • configured' : h.aiMode === 'gemini' ? '✦ Gemini 2.0 • configured' : '✦ Deterministic + AI Rubric';
     $('modeBanner').innerHTML = h.paypalMode.includes('live')
       ? `🟢 <b>Connected to Live PayPal (${h.paypalMode})</b> • DB: ${h.dbAdapter} • RBAC + Idempotency + SHA-256 Audit Active`
       : `🟡 <b>Zero-Config Sandbox Simulation</b> (set <code>PAYPAL_CLIENT_ID</code> & <code>XAI_API_KEY</code> (or <code>GEMINI_API_KEY</code>) in <code>.env</code> for live cloud APIs) • DB: <b>${h.dbAdapter}</b>`;

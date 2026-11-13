@@ -180,12 +180,16 @@ async function geminiScore(brief, sanitizedDelivery) {
 }
 
 
-async function xaiScore(brief, sanitizedDelivery) {
-  const res = await fetch('https://api.x.ai/v1/chat/completions', {
+async function xaiScore(brief, sanitizedDelivery, provider = 'xai') {
+  const isGroq = provider === 'groq';
+  const endpoint = isGroq ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://api.x.ai/v1/chat/completions';
+  const key = isGroq ? config.ai.groqKey : config.ai.xaiKey;
+  const model = isGroq ? config.ai.groqModel : config.ai.xaiModel;
+  const res = await fetch(endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.ai.xaiKey}` },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
     body: JSON.stringify({
-      model: config.ai.xaiModel,
+      model,
       messages: [{ role: 'user', content: verificationPrompt(brief, sanitizedDelivery) }],
       response_format: { type: 'json_object' },
     }),
@@ -200,7 +204,7 @@ async function xaiScore(brief, sanitizedDelivery) {
     else if (/api.?key|authentication|unauthorized|invalid.?key/i.test(detail) || res.status === 401) category = 'API key or authentication issue';
     else if (/model|not found|not available|access/i.test(detail)) category = 'model unavailable or account lacks access';
     else if (/response.format|json.object|temperature|parameter|argument/i.test(detail)) category = 'unsupported request parameter';
-    throw new Error(`xAI HTTP ${res.status}: ${category}`);
+    throw new Error(`${isGroq ? 'Groq' : 'xAI'} HTTP ${res.status}: ${category}`);
   }
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content || '';
@@ -231,7 +235,7 @@ function collectRiskFlags(delivery, det, injectionHits) {
 
 function computeConfidence(scores, det, flags, mode) {
   let conf = 78;
-  if (mode === 'gemini' || mode === 'xai') conf += 8;
+  if (mode === 'gemini' || mode === 'xai' || mode === 'groq') conf += 8;
   if (det.coverage >= 25) conf += 7;
   if (det.hasLink) conf += 5;
   if (flags.length === 0) conf += 5;
@@ -254,7 +258,16 @@ async function verifyDelivery(brief, delivery) {
 
   let scores;
   let mode = 'deterministic-rubric';
-  if (config.ai.hasXai) {
+  if (config.ai.hasGroq) {
+    try {
+      scores = await xaiScore(brief, cleaned, 'groq');
+      mode = 'groq';
+    } catch (err) {
+      logger.warn({ err: err.message }, 'Groq unavailable, falling back to deterministic rubric');
+      scores = heuristicScore(brief, cleaned);
+      mode = 'rubric-fallback';
+    }
+  } else if (config.ai.hasXai) {
     try {
       scores = await xaiScore(brief, cleaned);
       mode = 'xai';
@@ -303,7 +316,7 @@ async function verifyDelivery(brief, delivery) {
     feedback,
     agents: ['Sanitizer Guard', 'Deterministic Validator', 'Verification Agent', 'Risk Agent', 'Comms Agent'],
     audit: {
-      model: mode === 'xai' ? config.ai.xaiModel : mode === 'gemini' ? 'gemini-2.0-flash' : 'trustsettle-rubric-v3',
+      model: mode === 'groq' ? config.ai.groqModel : mode === 'xai' ? config.ai.xaiModel : mode === 'gemini' ? 'gemini-2.0-flash' : 'trustsettle-rubric-v3',
       promptVersion: PROMPT_VERSION,
       inputHash: hashInput(brief, delivery),
       verifiedAt: new Date().toISOString(),
@@ -367,4 +380,5 @@ module.exports = {
   sanitizeDelivery,
   hasGemini: config.ai.hasGemini,
   hasXai: config.ai.hasXai,
+  hasGroq: config.ai.hasGroq,
 };
